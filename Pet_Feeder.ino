@@ -2,21 +2,22 @@
 #include <Keypad.h>
 #include <Servo.h>
 
-unsigned long timer, start, inicial;
+long timer, start, inicial;
 						//inicial = tempo ao ligar o arduino
 						//Start = tempo ao iniciar o programa
-unsigned long time; //Inserida pelo usuário
+long time; //Inserida pelo usuário
+String timeString;
+String schedule[4];
+// valor de milis em relação ao tempo
+long dia = 86400000;
+long hora = 3600000; 
+long minuto = 60000; 
+long segundo =  1000; 
 
 int pos = 0;
 Servo servo_A2;
-int a=0, b=0, c=0, d=0;
-int var=0;
-int C1=1,C2=2,C3=4,C4=5;
-char f='*';
-int tries=0,wrong=0;
-int warning=3;
 bool locked = true;
-
+bool active = false;
 
 const byte rows = 4;
 const byte columns = 4;
@@ -47,10 +48,15 @@ void setTimer(){
 void open(){
   lcd.clear();
   lcd.setCursor(2,0);
-    lcd.print("Feeding...");
-  
-  digitalWrite(A0,HIGH);
+  lcd.print("Feeding...");
   digitalWrite(A1,LOW);
+  digitalWrite(A0,HIGH);
+  tone(A5, 1300, 500);
+  delay(500);
+  tone(A5, 1000, 500);
+  delay(500);
+  tone(A5, 700, 500);
+  
     for (pos = 0; pos <= 90; pos += 1) {
         servo_A2.write(pos);//Open
         delay(15);
@@ -63,7 +69,9 @@ void close(){
     lcd.setCursor(4,0);
     lcd.print("Complete...");
   
+  digitalWrite(A1,HIGH);
   digitalWrite(A0,LOW);
+  
 	for (pos = 90; pos >= 0; pos -= 1) {
     servo_A2.write(pos);//Close
     delay(15);
@@ -72,33 +80,66 @@ void close(){
 lcd.clear();
 }
 
-int horas, minutos, segundos, milissegundos;
+long dias, horas, minutos, segundos, milissegundos;
+String stringHoras, stringMinutos, stringSegundos;
+int aux = 0;
 
 String milisParaHora(){
-  segundos = timer / 1000;
-  minutos = segundos / 60;
-  horas = minutos / 60;
+  dias = timer / dia ;                              
+  horas = (timer % dia) / hora;                       
+  minutos = ((timer % dia) % hora) / minuto ;         
+  segundos = (((timer % dia) % hora) % minuto) / segundo;
+  stringHoras = String(horas);
+  stringMinutos = String(minutos);
+  stringSegundos = String(segundos);
   
-  String milisHora = String(horas);
+  if(stringHoras.length() == 1){
+   	stringHoras = "0";
+    stringHoras.concat(String(horas));
+  }
+  if(stringMinutos.length() == 1){
+   	stringMinutos = "0";
+    stringMinutos.concat(String(minutos));
+  }
+  if(stringSegundos.length() == 1){
+   	stringSegundos = "0";
+    stringSegundos.concat(String(segundos));
+  }
+
+  String milisHora = stringHoras;
   milisHora.concat(":");
-  milisHora.concat(String(minutos));
+  milisHora.concat(stringMinutos);
   milisHora.concat(":");
-  milisHora.concat(String(segundos));
+  milisHora.concat(stringSegundos);
+  if(segundos == 1 && aux == 0){
+  lcd.clear();
+    aux = 1;
+  }
+  if(aux == 1 && segundos != 1){
+  	aux = 0;
+  }
   return milisHora;
 }
 
-String horaParaMilis(){
-  minutos = horas * 60;
-  segundos = minutos * 60;
-  milissegundos = segundos * 1000;
-  
-  String horaMilis = String(horas);
-  horaMilis.concat(":");
-  horaMilis.concat(String(minutos));
-  horaMilis.concat(":");
-  horaMilis.concat(String(segundos));
-  return horaMilis;
+
+ char buf[6];
+ 
+ String timeToChar(){ 
+  String Hora;
+   for (int i = 0; i < 6 ; i++){
+   	buf[i] = timeString.charAt(i);
+   }
+  Hora.concat(buf[0]);
+  Hora.concat(buf[1]);
+  Hora.concat(":");
+  Hora.concat(buf[2]);
+  Hora.concat(buf[3]);
+  Hora.concat(":");
+  Hora.concat(buf[4]);
+  Hora.concat(buf[5]);
+  return Hora;
 }
+
 
 void concat(int y){
   time = 10*time + y;
@@ -111,69 +152,131 @@ void loop(){
   char key = keypad.getKey();
   if(key){
   switch (key){
+    case 'A':
+    	schedule[0] = timeToChar();
+    	lcd.clear();
+    	lcd.setCursor(7,1),lcd.print("Time set!");
+    	delay(1000);
+    	lcd.clear();
+    	timeString = "";
+    	break;
+    case 'B':
+    	schedule[1] = timeToChar();
+    	lcd.clear();
+    	lcd.setCursor(7,1),lcd.print("Time set!");
+    	delay(1000);
+    	lcd.clear();
+    	timeString = "";
+    	break;
+    case 'C':
+    	schedule[2] = timeToChar();
+    	lcd.clear();
+    	lcd.setCursor(7,1),lcd.print("Time set!");
+    	delay(1000);
+    	lcd.clear();
+    	timeString = "";
+    	break;
+    case 'D':
+    	schedule[3] = timeToChar();
+    	lcd.clear();
+    	lcd.setCursor(7,1),lcd.print("Time set!");
+    	delay(1000);
+    	lcd.clear();
+    	timeString = "";
+    	break;
    	case '*':
     	setTimer();
     	lcd.clear();
+    	lcd.setCursor(7,1),lcd.print("Time set!");
+    	delay(1000);
+    	lcd.clear();
+    	timeString = "";
+    	active = true;
+    	break;
+    case '#':
+    	time = 0;
+    	lcd.clear();
+    	timeString = "";
     	break;
     case '1':
     	concat(1);
-    lcd.clear();
+    	timeString.concat(1);
+    	lcd.clear();
     	break;
     case '2':
-    		concat(2);
-    lcd.clear();
+    	concat(2);
+    	timeString.concat(2);
+    	lcd.clear();
     	break;
     case '3':
-    		concat(3);
-    lcd.clear();
+    	concat(3);
+    	timeString.concat(3);
+    	lcd.clear();
     	break;
     case '4':
-    		concat(4);
-    lcd.clear();
+    	concat(4);
+    	timeString.concat(4);
+    	lcd.clear();
     	break;
     case '5':
-    		concat(5);
-    lcd.clear();
+    	concat(5);
+    	timeString.concat(5);
+    	lcd.clear();
     	break;
     case '6':
-    		concat(6);
-    lcd.clear();
+    	concat(6);
+    	timeString.concat(6);
+    	lcd.clear();
     	break;
     case '7':
-    		concat(7);
-    lcd.clear();
+    	concat(7);
+    	timeString.concat(7);
+    	lcd.clear();
     	break;
     case '8':
-    		concat(8);
-    lcd.clear();
+    	concat(8);
+    	timeString.concat(8);
+    	lcd.clear();
     	break;
     case '9':
-    		concat(9);
-    lcd.clear();
+    	concat(9);
+    	timeString.concat(9);
+    	lcd.clear();
     	break;
     case '0':
-    		concat(0);
-    lcd.clear();
+    	concat(0);
+    	timeString.concat(0);
+    	lcd.clear();
     	break;
   }
   }
   
-  if(timer > t && t > 0){
-  	lcd.setCursor(14,1),lcd.print("!");
+  if(timer > t && t > 0 && active == true){
     open();
     delay(1000);
     close();
     setTimer();
   }
+  
+  for (int i = 0; i < 4; i++){
+    if(milisParaHora().equals(schedule[i]) == true){
+    	open();
+    	delay(1000);
+    	close();
+    	setTimer();
+    }
+  }
+  
  
  if(locked == false){
    lcd.clear();
      lcd.setCursor(4,0),lcd.print("Feeding...");
    
  } else {
- 	 lcd.setCursor(0,0),lcd.print("Feed each");
-     lcd.setCursor(13,0),lcd.print(time);
-     lcd.setCursor(15,0),lcd.print("s");
-   	 lcd.setCursor(1,1),lcd.print(milisParaHora());
+ 	 lcd.setCursor(0,0),lcd.print("Pet Feeder V8");
+     lcd.setCursor(9,1),lcd.print(timeString);
+   	 lcd.setCursor(0,1),lcd.print(milisParaHora());
+   	 digitalWrite(A1,HIGH);
+  	 digitalWrite(A0,LOW);
  }
 }
