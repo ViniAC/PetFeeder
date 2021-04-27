@@ -36,7 +36,7 @@ LiquidCrystal lcd(13,12,11,10, 9, 8);
 void setup(){
   servo_A2.attach(A2, 500, 2500);
   lcd.begin(16,2); 
-  pinMode(A5,OUTPUT);//Piezo for future integration
+  pinMode(A5,OUTPUT);
   pinMode(A0,OUTPUT); 
   pinMode(A1,OUTPUT);
   servo_A2.write(0);
